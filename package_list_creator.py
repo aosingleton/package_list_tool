@@ -42,15 +42,17 @@ class PackageListCreator():
         subprocess.call(cmd, shell=True)
         logging.info('...created rpm listing file')
 
-    def install_rpm_listing(self, filename='s3_requirements_list.txt'):
-        cmd = f'sudo yum install $(cat {filename}) -y'
+    def install_rpm_listing(self,):
+        """Install downloaded s3 requirements file."""
+        cmd = 'yum install $(cat s3_requirements_list.txt) -y'
         subprocess.call(cmd, shell=True)
 
     def import_s3_package_listing(self, bucket_name, filename):
+        """Copies s3 requirements file listing and updates file name."""
         logging.info('...copying requirements file from s3')
-        cmd = f'aws s3 cp s3://{bucket_name}/{filename} s3_requirements_list.txt'
+        updated_filename = 's3_requirements_list.txt'
+        cmd = f'aws s3 cp s3://{bucket_name}/{filename} {updated_filename}'
         subprocess.call(cmd, shell=True)
-
 
     def create_name_listing(self):
         """Parses yum package list to create names listing."""
@@ -81,13 +83,12 @@ class PackageListCreator():
             self.missing_qualified_urls['packages'].append(package_name)
             return url_error
 
-
     def create_qualified_url_listing(self):
         """Creates downloadable package http listing."""
         qualified_url_list = open('qualified_url_list.txt', 'a+')
         file_ = open('rpm_package_list.txt', 'r')
         read_file = file_.readlines()
-        package_coun = len(read_file)
+        package_count = len(read_file)
 
         try:
             for package in read_file:
@@ -231,7 +232,13 @@ class PackageListCreator():
         summary_report.write(json.dumps(summary_data))
         summary_report.close()
     
-    def run(self):# plc.create_yum_listing()
+    def run_install(self, bucket_name, filename):
+        """User may be asked to enter password."""
+        self.import_s3_package_listing(bucket_name, filename)
+        self.install_rpm_listing()
+
+    def run(self):
+        self.create_yum_listing()
         self.create_rpm_listing()
         self.create_name_listing()
         self.create_qualified_url_listing()
