@@ -123,11 +123,44 @@ class PackageListCreator():
             }
         return data
 
-    def is_key_value(self, value):
+    def has_key_value(self, value):
         """Returns boolean for PackageStat property key in value."""
         check = value in self.key_fields 
         return check
 
+    def has_description(self, value):
+        check = 'Description :' in value
+        return check
+
+    def get_package_description(self, yum_info):
+        """Returns description string from yum pacakge.  
+        Argument:
+        yum_info -- yum package info 
+        
+        Special: 
+        Pacakge values can be std, missing, or extended descritpions.
+        """
+        has_description = False
+        description = ''
+        no_description = 'no package description provided'
+
+        # looping through info to add additional description langauge to value
+        for item in yum_info:
+            if 'Description :' in item:
+                has_description = True
+            
+            if has_description:
+                try: 
+                    extended_description = item.split(':')[1]
+                    description += ' ' + extended_description.rstrip()
+                except:
+                    pass
+
+        print('running description check with description chekc', has_description)
+        if has_description:
+            return description
+        else:
+            return no_description
 
     def get_yum_package_info(self, package_name):
         """Returns array of package info (e.g. Name, Arch, etc)."""
@@ -140,15 +173,22 @@ class PackageListCreator():
     
     def create_package(self, yum_info_set):
         """Updates package listing using yum data."""
+        # print('trying to create package')
+        # print(yum_info_set)
         new_package = {}
 
+        # looping through yum data and updating package with parsed info
         for item in yum_info_set:
             field_data = self.parse_raw_field_info(item)
             key = field_data['key']
             value = field_data['value']
-            check = self.is_key_value(key)
-            if check:
+
+            has_key_field = self.has_key_value(key)
+            if has_key_field:
                 new_package[key] = value
+        
+        description = self.get_package_description(yum_info_set)
+        new_package['description'] = description
 
         self.package_list['packages'].append(new_package)
     
@@ -162,3 +202,4 @@ class PackageListCreator():
             self.create_package(yum_info)
         
         self.package_list['package_count'] = len(self.package_list['packages'])
+        print('here is full pack list', self.package_list)

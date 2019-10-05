@@ -23,6 +23,24 @@ PACKAGE_LISTING = []
 # plc.create_qualified_url_listing()
 
 # create complete pacakge listing
-# plc.create_package_listing()
+plc.create_package_listing()
 
+# pkg = 'perl-Getopt-Long-2.40-3.amzn2.noarch'
+# info = plc.get_yum_package_info(pkg)
+# descrip = plc.get_package_description(info)
+# has_description = False
+# description = ''
+# for item in info:
+#     if 'Description :' in item:
+#         has_description = True
 
+#     if has_description:
+#         try: 
+#             extended_description = item.split(':')[1]
+#             # print(extended_description.strip())
+#             description += extended_description.strip()
+#         except:
+#             pass
+
+# print('here is description', description)
+# return description
