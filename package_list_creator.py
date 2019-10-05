@@ -1,6 +1,7 @@
 """Runs cli commands to capture package libries and dependencies."""
 import os
 import subprocess
+import json
 import logging
 import datetime
 
@@ -8,14 +9,13 @@ import datetime
 logging.basicConfig(
     format='%(levelname)s:%(message)s',
     level=logging.INFO,
-    file='package_report.txt')
+    filename='package_report.txt')
 
 class PackageListCreator():
     def __init__(self, bucket_name=None, export=None):
         self.bucket_name = bucket_name
         self.summary_rpm_list_count = 0
         self.summary_yum_list_count = 0
-        self.summary_report_created_at = datetime.datetime.today()
         self.missing_qualified_urls = {'count': 0, 'packages': []}
         self.missing_descriptions = {'count': 0, 'packages': []}
         self.package_list = {'packages': []}
@@ -83,10 +83,10 @@ class PackageListCreator():
             for package in read_file:
                 url = self.get_qualified_url(package.rstrip())
                 qualified_url_list.write(url)
-            logging.info(f'...created qualified url listing for {package_count} packages'
+                logging.info(f'...created qualified url listing for {package_count} packages')
         except:
-            logging.error('...could not create qualified url listing for packages')
-
+            pass
+        
     def parse_raw_field_info(self, read_line):
         """Returns parsed package listing key-value pair.
         
@@ -97,17 +97,16 @@ class PackageListCreator():
             values = read_line.split(':')
             field_key = values[0].strip()
             field_value = values[1].strip()
+            data = {
+                    'key': field_key,
+                    'value': field_value
+                }
         except:
             data = {
                 'key': values[0],
                 'value': 'no data provided'
             }
-            return data
 
-        data = {
-                'key': field_key,
-                'value': field_value
-            }
         return data
 
     def has_key_value(self, value):
@@ -198,18 +197,29 @@ class PackageListCreator():
 
     # TODO
     def compress_packages(self):
-        """Compresses fileeeeeee for export to s3."""
+        """Compresses file for export to s3."""
         pass
     
     def create_summary(self):
         summary_data = {
-            'report_created' : self.summary_report_created_at,
-            'rpm_count' : self.summary_rpm_list_count,
-            'yum_count' : self.summary_yum_list_count,
-            'missing_urls' : self.missing_qualified_urls,
-            'missing_descriptions': self.missing_descriptions
+            'summary' : {
+                'report_created' : datetime.datetime.today().strftime('%c'),
+                'general': {
+                    'rpm_package_count' : self.summary_rpm_list_count,
+                    'yum_package_count' : self.summary_yum_list_count,
+                    'missing_urls' : self.missing_qualified_urls,
+                    'missing_descriptions': self.missing_descriptions
+                }
+            }
         }
-        
-        summary_report = open('summary_report.json')
-        summary_report.write(summary_data)
+
+        summary_report = open('summary_report.json', 'w')
+        summary_report.write(json.dumps(summary_data))
         summary_report.close()
+    
+    def run(self):# plc.create_yum_listing()
+        self.create_rpm_listing()
+        self.create_name_listing()
+        self.create_qualified_url_listing()
+        self.create_package_listing()
+        self.create_summary()
