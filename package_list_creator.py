@@ -44,7 +44,7 @@ class PackageListCreator():
 
     def install_rpm_listing(self,):
         """Install downloaded s3 requirements file."""
-        cmd = 'yum install $(cat s3_requirements_list.txt) -y'
+        cmd = 'sudo yum install $(cat s3_requirements_list.txt) -y'
         subprocess.call(cmd, shell=True)
 
     def import_s3_package_listing(self, bucket_name, filename):
