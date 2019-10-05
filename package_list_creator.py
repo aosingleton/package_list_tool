@@ -118,7 +118,7 @@ class PackageListCreator():
         check = 'Description :' in value
         return check
 
-    def get_package_description(self, yum_info_set):
+    def get_package_description(self, package_name=None, yum_info_set):
         """Returns description string from yum pacakge.  
         Argument:
         yum_info_set -- yum package info 
@@ -172,7 +172,11 @@ class PackageListCreator():
             if has_key_field:
                 new_package[key] = value
         
-        description = self.get_package_description(yum_info_set)
+        try:
+            package_name = new_package['name']
+        except:
+            package_name = None
+        description = self.get_package_description(package_name, yum_info_set)
         new_package['description'] = description
 
         self.package_list['packages'].append(new_package)
