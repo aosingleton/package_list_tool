@@ -1,0 +1,4 @@
+INFO:...copying requirements file from s3
+INFO:...copying requirements file from s3
+INFO:...copying requirements file from s3
+INFO:...copying requirements file from s3

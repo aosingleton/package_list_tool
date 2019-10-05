@@ -42,6 +42,16 @@ class PackageListCreator():
         subprocess.call(cmd, shell=True)
         logging.info('...created rpm listing file')
 
+    def install_rpm_listing(self, filename='s3_requirements_list.txt'):
+        cmd = f'sudo yum install $(cat {filename}) -y'
+        subprocess.call(cmd, shell=True)
+
+    def import_s3_package_listing(self, bucket_name, filename):
+        logging.info('...copying requirements file from s3')
+        cmd = f'aws s3 cp s3://{bucket_name}/{filename} s3_requirements_list.txt'
+        subprocess.call(cmd, shell=True)
+
+
     def create_name_listing(self):
         """Parses yum package list to create names listing."""
         file_name = 'yum_package_list.txt'
@@ -118,7 +128,7 @@ class PackageListCreator():
         check = 'Description :' in value
         return check
 
-    def get_package_description(self, package_name=None, yum_info_set):
+    def get_package_description(self, yum_info_set, package_name=None):
         """Returns description string from yum pacakge.  
         Argument:
         yum_info_set -- yum package info 
