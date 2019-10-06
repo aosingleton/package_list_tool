@@ -9,23 +9,22 @@ bucket_name = 'astempbucket105'
 filename = 'rpm_package_list.txt'
 
 # create yum package list file
-# plc.create_yum_listing()
+plc.create_yum_listing()
 
 # create rpm package list file
-# plc.create_rpm_listing()
+plc.create_rpm_listing()
 
 # create name only list file
-# plc.create_name_listing()
+plc.create_name_listing()
 
 # create list of rpm package url
-# plc.create_qualified_url_listing()
+plc.create_qualified_url_listing()
 
 # create complete pacakge listing
-# plc.create_package_listing()
+plc.create_package_listing()
 
 # create summary report
-# plc.create_summary()
+plc.create_summary()
 
 # copy requirements file from s3 and install
-# plc.run_install(bucket_name, filename)
-plc.install_rpm_listing()
+plc.run_install(bucket_name, filename)

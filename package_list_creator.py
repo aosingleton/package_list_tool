@@ -1,15 +1,16 @@
 """Runs cli commands to capture package libries and dependencies."""
 import os
-import subprocess
+import datetime
 import json
 import logging
-import datetime
+import subprocess
 
 
 logging.basicConfig(
     format='%(levelname)s:%(message)s',
     level=logging.INFO,
     filename='package_report.txt')
+
 
 class PackageListCreator():
     def __init__(self, bucket_name=None, export=None):
@@ -31,24 +32,24 @@ class PackageListCreator():
             'URL',
             'License',
         ]
-        
+
     def create_yum_listing(self):
-        cmd = 'yum list > yum_package_list.txt'
+        logging.info('...creating yum listing file')
+        cmd = 'yum list installed > yum_package_list.txt'
         subprocess.call(cmd, shell=True)
-        logging.info('...created yum listing file')
-    
+
     def create_rpm_listing(self):
+        logging.info('...creating rpm listing file')
         cmd = 'rpm -qa > rpm_package_list.txt'
         subprocess.call(cmd, shell=True)
-        logging.info('...created rpm listing file')
 
     def install_rpm_listing(self,):
-        """Install downloaded s3 requirements file."""
+        """Installs downloaded s3 requirements file."""
         cmd = 'sudo yum install $(cat s3_requirements_list.txt) -y'
         subprocess.call(cmd, shell=True)
 
     def import_s3_package_listing(self, bucket_name, filename):
-        """Copies s3 requirements file listing and updates file name."""
+        """Downloads s3 requirements file listing and updates file name."""
         logging.info('...copying requirements file from s3')
         updated_filename = 's3_requirements_list.txt'
         cmd = f'aws s3 cp s3://{bucket_name}/{filename} {updated_filename}'
@@ -56,6 +57,7 @@ class PackageListCreator():
 
     def create_name_listing(self):
         """Parses yum package list to create names listing."""
+        logging.info('...creating names only package listing file')
         file_name = 'yum_package_list.txt'
         package_listing_raw = open(file_name, 'r')
         package_name_listing = open('packages_names_only.txt', 'a+')
@@ -67,24 +69,25 @@ class PackageListCreator():
             package_name_listing.write(package_name + '\n')
 
         package_name_listing.close()
-        logging.info('...created names only package listing file')
 
     def get_qualified_url(self, package_name):
         """Returns full url for rpm package download."""
+        logging.info(f'...grabbing qualified url for {package_name}')
+
         try:
             cmd = f'yumdownloader --url {package_name} | grep "http"'
             url_in_bytes = subprocess.check_output(cmd, shell=True)
             url = str(url_in_bytes, 'utf-8')
-            logging.info(f'...grabbing qualified url for {package_name}')
             return url
         except Exception as e:
-            url_error = f'Error: could not grab qualified url for : {package_name}.'
+            url_error = f'Error: could not grab qualified url for {package_name}.'
             self.missing_qualified_urls['count'] += 1
             self.missing_qualified_urls['packages'].append(package_name)
             return url_error
 
     def create_qualified_url_listing(self):
         """Creates downloadable package http listing."""
+        logging.info('...creating package qualified url listing file')
         qualified_url_list = open('qualified_url_list.txt', 'a+')
         file_ = open('rpm_package_list.txt', 'r')
         read_file = file_.readlines()
@@ -94,13 +97,14 @@ class PackageListCreator():
             for package in read_file:
                 url = self.get_qualified_url(package.rstrip())
                 qualified_url_list.write(url)
-                logging.info(f'...created qualified url listing for {package_count} packages')
+                logging.info(
+                    f'...created qualified url listing for {package_count} packages')
         except:
             pass
-        
+
     def parse_raw_field_info(self, read_line):
         """Returns parsed package listing key-value pair.
-        
+
         Arguments:
         read_line -- passed yum package information
         """
@@ -109,9 +113,9 @@ class PackageListCreator():
             field_key = values[0].strip()
             field_value = values[1].strip()
             data = {
-                    'key': field_key,
-                    'value': field_value
-                }
+                'key': field_key,
+                'value': field_value
+            }
         except:
             data = {
                 'key': values[0],
@@ -121,8 +125,8 @@ class PackageListCreator():
         return data
 
     def has_key_value(self, value):
-        """Returns boolean for PackageStat property key in value."""
-        check = value in self.key_fields 
+        """Returns boolean if 'value' is in key field list."""
+        check = value in self.key_fields
         return check
 
     def has_description(self, value):
@@ -133,10 +137,11 @@ class PackageListCreator():
         """Returns description string from yum pacakge.  
         Argument:
         yum_info_set -- yum package info 
-        
+
         Special: 
         Pacakge values can be std, missing, or extended descritpions.
         """
+        logging.info(f'...grabbing description for {package_name}')
         has_description = False
         description = ''
         no_description = 'no package description provided'
@@ -145,9 +150,9 @@ class PackageListCreator():
         for item in yum_info_set:
             if 'Description :' in item:
                 has_description = True
-            
+            ``
             if has_description:
-                try: 
+                try:
                     extended_description = item.split(':')[1]
                     description += ' ' + extended_description.rstrip()
                 except:
@@ -168,7 +173,7 @@ class PackageListCreator():
         yum_info = info[4:]
 
         return yum_info
-    
+
     def create_package(self, yum_info_set):
         """Updates package listing using yum data."""
         new_package = {}
@@ -182,17 +187,18 @@ class PackageListCreator():
             has_key_field = self.has_key_value(key)
             if has_key_field:
                 new_package[key] = value
-        
+
         try:
             package_name = new_package['name']
         except:
             package_name = None
+
         description = self.get_package_description(package_name, yum_info_set)
         new_package['description'] = description
-
         self.package_list['packages'].append(new_package)
-        logging.info('...creating package information for {}'.format(new_package['name']))
-    
+        logging.info('...creating package information for {}'.format(
+            new_package['name']))
+
     def create_package_listing(self):
         """Creates full package listing with avaiable yum data."""
         rpm_file = 'rpm_package_list.txt'
@@ -201,7 +207,7 @@ class PackageListCreator():
         for package in package_names:
             yum_info_set = self.get_yum_package_info(package)
             self.create_package(yum_info_set)
-        
+
         self.package_list['package_count'] = len(self.package_list['packages'])
         logging.info('...completed package listing update.')
 
@@ -214,15 +220,15 @@ class PackageListCreator():
     def compress_packages(self):
         """Compresses file for export to s3."""
         pass
-    
+
     def create_summary(self):
         summary_data = {
-            'summary' : {
-                'report_created' : datetime.datetime.today().strftime('%c'),
+            'summary': {
+                'report_created': datetime.datetime.today().strftime('%c'),
                 'general': {
-                    'rpm_package_count' : self.summary_rpm_list_count,
-                    'yum_package_count' : self.summary_yum_list_count,
-                    'missing_urls' : self.missing_qualified_urls,
+                    'rpm_package_count': self.summary_rpm_list_count,
+                    'yum_package_count': self.summary_yum_list_count,
+                    'missing_urls': self.missing_qualified_urls,
                     'missing_descriptions': self.missing_descriptions
                 }
             }
@@ -231,7 +237,7 @@ class PackageListCreator():
         summary_report = open('summary_report.json', 'w')
         summary_report.write(json.dumps(summary_data))
         summary_report.close()
-    
+
     def run_install(self, bucket_name, filename):
         """User may be asked to enter password."""
         self.import_s3_package_listing(bucket_name, filename)
