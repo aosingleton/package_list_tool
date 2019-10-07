@@ -15,8 +15,8 @@ logging.basicConfig(
 class PackageListCreator():
     def __init__(self, bucket_name=None, export=None):
         self.bucket_name = bucket_name
-        self.summary_rpm_list_count = 0
-        self.summary_yum_list_count = 0
+        self.summary_info_rpm_count = 0
+        self.summary_info_yum_count = 0
         self.missing_qualified_urls = {'count': 0, 'packages': []}
         self.missing_descriptions = {'count': 0, 'packages': []}
         self.package_list = {'packages': []}
@@ -46,26 +46,24 @@ class PackageListCreator():
         subprocess.call(cmd, shell=True)
 
     def create_yum_listing(self):
+        """Creates yum package listing and sets package count value."""
         logging.info('...creating yum listing file')
-        cmd = 'yum list installed > user_packages/yum_package_list.txt'
+        file_name = 'user_packages/yum_package_list.txt'
+        cmd = f'yum list installed > {file_name}'
         subprocess.call(cmd, shell=True)
+        file_ = open(file_name, 'r')
+        count = len(file_.readlines())
+        self.summary_info_yum_count = count
 
     def create_rpm_listing(self):
+        """Creates rpm package listing and sets package count value."""
         logging.info('...creating rpm listing file')
-        cmd = 'rpm -qa > user_packages/rpm_package_list.txt'
+        file_name = 'user_packages/rpm_package_list.txt'
+        cmd = f'rpm -qa > {file_name}'
         subprocess.call(cmd, shell=True)
-
-    def install_rpm_listing(self,):
-        """Installs downloaded s3 requirements file."""
-        cmd = 'sudo yum install $(cat s3_requirements_list.txt) -y'
-        subprocess.call(cmd, shell=True)
-
-    def import_s3_package_listing(self, bucket_name, filename):
-        """Downloads s3 requirements file listing and updates file name."""
-        logging.info('...copying requirements file from s3')
-        updated_filename = 's3_requirements_list.txt'
-        cmd = f'aws s3 cp s3://{bucket_name}/{filename} user_packages/{updated_filename}'
-        subprocess.call(cmd, shell=True)
+        file_ = open(file_name, 'r')
+        count = len(file_.readlines())
+        self.summary_info_rpm_count = count
 
     def create_name_listing(self):
         """Parses yum package list to create names listing."""
@@ -82,7 +80,7 @@ class PackageListCreator():
 
         package_name_listing.close()
 
-    def get_qualified_url(self, package_name):
+    def _get_qualified_url(self, package_name):
         """Returns json containing package name and url for rpm package download."""
         logging.info(f'...grabbing qualified url for {package_name}')
 
@@ -107,7 +105,7 @@ class PackageListCreator():
 
         try:
             for package in read_file:
-                url_info = self.get_qualified_url(package.rstrip())
+                url_info = self._get_qualified_url(package.rstrip())
                 qualified_url_list.write(json.dumps(url_info))
                 qualified_url_list.write('\n')
                 logging.info(
@@ -115,7 +113,7 @@ class PackageListCreator():
         except Exception as e:
             logging.error(f'...could not create qualified url listing do to error: {e}')
 
-    def parse_raw_field_info(self, read_line):
+    def _parse_raw_field(self, read_line):
         """Returns parsed package listing key-value pair.
 
         Arguments:
@@ -137,13 +135,9 @@ class PackageListCreator():
 
         return data
 
-    def has_key_value(self, value):
+    def _has_key_field(self, value):
         """Returns boolean if 'value' is in key field list."""
         check = value in self.key_fields
-        return check
-
-    def has_description(self, value):
-        check = 'Description :' in value
         return check
 
     def get_package_description(self, yum_info_set, package_name=None):
@@ -195,11 +189,11 @@ class PackageListCreator():
 
         # looping through yum data and updating package with parsed info
         for item in yum_info_set:
-            field_data = self.parse_raw_field_info(item)
+            field_data = self._parse_raw_field(item)
             key = field_data['key']
             value = field_data['value']
 
-            has_key_field = self.has_key_value(key)
+            has_key_field = self._has_key_field(key)
             if has_key_field:
                 new_package[key] = value
 
@@ -234,14 +228,17 @@ class PackageListCreator():
         self.package_list['package_count'] = len(self.package_list['packages'])
         all_package_info.write(json.dumps(self.package_list))
 
-    def create_summary(self):
-        """Creates summary file describing instance package information."""
+    def _create_summary(self):
+        """Creates summary file describing instance package information.  
+
+        Should be run only as part of self.run() as some class values are set only once in memory (e.g. summary_info_rpm_count).
+        """
         summary_data = {
             'summary': {
                 'report_created': datetime.datetime.today().strftime('%c'),
-                'general': {
-                    'rpm_package_count': self.summary_rpm_list_count,
-                    'yum_package_count': self.summary_yum_list_count,
+                'package_info': {
+                    'rpm_package_count': self.summary_info_rpm_count,
+                    'yum_package_count': self.summary_info_yum_count,
                     'missing_urls': self.missing_qualified_urls,
                     'missing_descriptions': self.missing_descriptions
                 }
@@ -252,13 +249,25 @@ class PackageListCreator():
         summary_report.write(json.dumps(summary_data))
         summary_report.close()
 
+    def _install_rpm_listing(self,):
+        """Installs downloaded s3 requirements file."""
+        cmd = 'sudo yum install $(cat s3_requirements_list.txt) -y'
+        subprocess.call(cmd, shell=True)
+
+    def _import_s3_package_listing(self, bucket_name, filename):
+        """Downloads s3 requirements file listing and updates file name."""
+        logging.info('...copying requirements file from s3')
+        updated_filename = 's3_requirements_list.txt'
+        cmd = f'aws s3 cp s3://{bucket_name}/{filename} user_packages/{updated_filename}'
+        subprocess.call(cmd, shell=True)
+
     def run_install(self, bucket_name, filename):
         """Installs downloaded pacakge list.
         
         Should be updated to install from either internet or zip folder if interet is inaccessible.  User may be asked to enter password.
         """
-        self.import_s3_package_listing(bucket_name, filename)
-        self.install_rpm_listing()
+        self._import_s3_package_listing(bucket_name, filename)
+        self._install_rpm_listing()
 
     def run(self):
         self.create_packages_folder()

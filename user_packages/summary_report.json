@@ -1,0 +1,1 @@
+{"summary": {"report_created": "Mon Oct  7 13:49:58 2019", "package_info": {"rpm_package_count": 10, "yum_package_count": 100, "missing_urls": {"count": 9, "packages": ["first", "second"]}, "missing_descriptions": {"count": 9, "packages": ["first", "second"]}}}}
