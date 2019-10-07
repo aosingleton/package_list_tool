@@ -14,4 +14,4 @@
 #### TODO
 - Add function to zip all package installation data stored in yum cache.
 - Add function to push zip file to s3 bucket.
-- Add function to produce and store report information in defined s3 bucket.  Can be used to replicate systems manager instance data and also to support compliance as compliment to AWS config.
+- Add function to produce and store report information in defined s3 bucket.  Can be used to replicate systems manager instance data and also to support compliance as a compliment to AWS config.

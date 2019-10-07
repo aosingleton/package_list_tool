@@ -1,4 +1,4 @@
-"""Runs cli commands to capture package libries and dependencies."""
+"""Runs cli commands to capture package and dependency information."""
 import os
 import datetime
 import json
@@ -34,6 +34,7 @@ class PackageListCreator():
         ]
 
     def create_packages_folder(self, folder_name='user_packages'):
+        logging.info('...createing user packages folder.')
         cmd = '''
         varDIR="{}"
         if [ -d "$varDIR" ]; then
@@ -82,7 +83,7 @@ class PackageListCreator():
         package_name_listing.close()
 
     def get_qualified_url(self, package_name):
-        """Returns full url for rpm package download."""
+        """Returns json containing package name and url for rpm package download."""
         logging.info(f'...grabbing qualified url for {package_name}')
 
         try:
@@ -112,8 +113,7 @@ class PackageListCreator():
                 logging.info(
                     f'...created qualified url listing for {package_count} packages')
         except Exception as e:
-            logging.error('...could not create qualified url listing')
-            print(e)
+            logging.error(f'...could not create qualified url listing do to error: {e}')
 
     def parse_raw_field_info(self, read_line):
         """Returns parsed package listing key-value pair.
@@ -206,6 +206,7 @@ class PackageListCreator():
         except:
             package_name = None
 
+        # parsing yum info to return description or 'missing data' message
         description = self.get_package_description(package_name, yum_info_set)
         new_package['description'] = description
         self.package_list['packages'].append(new_package)
@@ -213,19 +214,23 @@ class PackageListCreator():
             new_package['name']))
 
     def create_package_listing(self):
-        """Updates object package list array with avaiable yum data."""
+        """Updates object package list array with avaiable yum data.
+        
+        Creates final package listing file containing.
+        """
+        logging.info('...completing package listing update.')
         rpm_file = 'user_packages/rpm_package_list.txt'
         names = open(rpm_file, 'r')
         package_names = names.readlines()
+
         for package in package_names:
             yum_info_set = self.get_yum_package_info(package)
             self.create_package(yum_info_set)
 
         self.package_list['package_count'] = len(self.package_list['packages'])
-        logging.info('...completed package listing update.')
-        print('finished updating listing.  here is list ***', self.package_list['packages'])
 
     def create_summary(self):
+        """Creates summary file describing instance package information."""
         summary_data = {
             'summary': {
                 'report_created': datetime.datetime.today().strftime('%c'),
