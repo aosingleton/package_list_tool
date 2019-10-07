@@ -1,0 +1,4 @@
+at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
+mythes-1.2.3-7.amzn2.0.2.x86_64
+perl-Getopt-Long-2.40-3.amzn2.noarch
+mesa-libgbm-17.2.3-8.20171019.amzn2.0.4.i686

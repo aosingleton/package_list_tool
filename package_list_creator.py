@@ -73,7 +73,7 @@ class PackageListCreator():
         package_listing_raw = open(file_name, 'r')
         package_name_listing = open('user_packages/packages_names_only.txt', 'a+')
         read_listing = package_listing_raw.readlines()
-        read_listing = read_listing[4:8]
+        read_listing = read_listing[4:]
 
         for package_info in read_listing:
             package_name = package_info.split(' ')[0]
@@ -89,29 +89,31 @@ class PackageListCreator():
             cmd = f'yumdownloader --url {package_name} | grep "http"'
             url_in_bytes = subprocess.check_output(cmd, shell=True)
             url = str(url_in_bytes, 'utf-8')
-            return url
+            return {'Name': package_name, 'URL': url }
         except Exception as e:
-            url_error = f'Error: could not grab qualified url for {package_name}.'
+            url_error = 'could not grab qualified url'
             self.missing_qualified_urls['count'] += 1
             self.missing_qualified_urls['packages'].append(package_name)
-            return url_error
+            return {'Name': package_name, 'URL': url_error }
 
     def create_qualified_url_listing(self):
         """Creates downloadable package http listing."""
         logging.info('...creating package qualified url listing file')
-        qualified_url_list = open('user_packages/qualified_url_list.txt', 'a+')
-        file_ = open('rpm_package_list.txt', 'r')
+        qualified_url_list = open('user_packages/qualified_url_list.json', 'a+')
+        file_ = open('user_packages/rpm_package_list.txt', 'r')
         read_file = file_.readlines()
         package_count = len(read_file)
 
         try:
             for package in read_file:
-                url = self.get_qualified_url(package.rstrip())
-                qualified_url_list.write(url)
+                url_info = self.get_qualified_url(package.rstrip())
+                qualified_url_list.write(json.dumps(url_info))
+                qualified_url_list.write('\n')
                 logging.info(
                     f'...created qualified url listing for {package_count} packages')
-        except:
-            pass
+        except Exception as e:
+            logging.error('...could not create qualified url listing')
+            print(e)
 
     def parse_raw_field_info(self, read_line):
         """Returns parsed package listing key-value pair.
@@ -186,7 +188,7 @@ class PackageListCreator():
         return yum_info
 
     def create_package(self, yum_info_set):
-        """Updates package listing using yum data."""
+        """Parses yum info fields and updates package listing."""
         new_package = {}
 
         # looping through yum data and updating package with parsed info
@@ -207,11 +209,11 @@ class PackageListCreator():
         description = self.get_package_description(package_name, yum_info_set)
         new_package['description'] = description
         self.package_list['packages'].append(new_package)
-        logging.info('...creating package information for {}'.format(
+        logging.info('...saving package information for {}'.format(
             new_package['name']))
 
     def create_package_listing(self):
-        """Creates full package listing with avaiable yum data."""
+        """Updates object package list array with avaiable yum data."""
         rpm_file = 'user_packages/rpm_package_list.txt'
         names = open(rpm_file, 'r')
         package_names = names.readlines()
@@ -221,6 +223,7 @@ class PackageListCreator():
 
         self.package_list['package_count'] = len(self.package_list['packages'])
         logging.info('...completed package listing update.')
+        print('finished updating listing.  here is list ***', self.package_list['packages'])
 
     def create_summary(self):
         summary_data = {

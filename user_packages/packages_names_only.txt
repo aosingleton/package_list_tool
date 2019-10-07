@@ -1,0 +1,9 @@
+GeoIP.x86_64
+GraphicsMagick.x86_64
+GraphicsMagick-c++.x86_64
+ModemManager-glib.x86_64
+GeoIP.x86_64
+GraphicsMagick.x86_64
+GraphicsMagick-c++.x86_64
+ModemManager-glib.x86_64
+NetworkManager-glib.x86_6
