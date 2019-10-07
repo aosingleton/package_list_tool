@@ -33,14 +33,25 @@ class PackageListCreator():
             'License',
         ]
 
+    def create_packages_folder(self, folder_name='user_packages'):
+        cmd = '''
+        varDIR="{}"
+        if [ -d "$varDIR" ]; then
+        echo
+        else
+        mkdir {}
+        fi
+        '''.format(folder_name, folder_name)
+        subprocess.call(cmd, shell=True)
+
     def create_yum_listing(self):
         logging.info('...creating yum listing file')
-        cmd = 'yum list installed > yum_package_list.txt'
+        cmd = 'yum list installed > user_packages/yum_package_list.txt'
         subprocess.call(cmd, shell=True)
 
     def create_rpm_listing(self):
         logging.info('...creating rpm listing file')
-        cmd = 'rpm -qa > rpm_package_list.txt'
+        cmd = 'rpm -qa > user_packages/rpm_package_list.txt'
         subprocess.call(cmd, shell=True)
 
     def install_rpm_listing(self,):
@@ -52,15 +63,15 @@ class PackageListCreator():
         """Downloads s3 requirements file listing and updates file name."""
         logging.info('...copying requirements file from s3')
         updated_filename = 's3_requirements_list.txt'
-        cmd = f'aws s3 cp s3://{bucket_name}/{filename} {updated_filename}'
+        cmd = f'aws s3 cp s3://{bucket_name}/{filename} user_packages/{updated_filename}'
         subprocess.call(cmd, shell=True)
 
     def create_name_listing(self):
         """Parses yum package list to create names listing."""
         logging.info('...creating names only package listing file')
-        file_name = 'yum_package_list.txt'
+        file_name = 'user_packages/yum_package_list.txt'
         package_listing_raw = open(file_name, 'r')
-        package_name_listing = open('packages_names_only.txt', 'a+')
+        package_name_listing = open('user_packages/packages_names_only.txt', 'a+')
         read_listing = package_listing_raw.readlines()
         read_listing = read_listing[4:8]
 
@@ -88,7 +99,7 @@ class PackageListCreator():
     def create_qualified_url_listing(self):
         """Creates downloadable package http listing."""
         logging.info('...creating package qualified url listing file')
-        qualified_url_list = open('qualified_url_list.txt', 'a+')
+        qualified_url_list = open('user_packages/qualified_url_list.txt', 'a+')
         file_ = open('rpm_package_list.txt', 'r')
         read_file = file_.readlines()
         package_count = len(read_file)
@@ -150,7 +161,7 @@ class PackageListCreator():
         for item in yum_info_set:
             if 'Description :' in item:
                 has_description = True
-            ``
+            
             if has_description:
                 try:
                     extended_description = item.split(':')[1]
@@ -201,7 +212,7 @@ class PackageListCreator():
 
     def create_package_listing(self):
         """Creates full package listing with avaiable yum data."""
-        rpm_file = 'rpm_package_list.txt'
+        rpm_file = 'user_packages/rpm_package_list.txt'
         names = open(rpm_file, 'r')
         package_names = names.readlines()
         for package in package_names:
@@ -210,16 +221,6 @@ class PackageListCreator():
 
         self.package_list['package_count'] = len(self.package_list['packages'])
         logging.info('...completed package listing update.')
-
-    # TODO
-    def export(self):
-        """Saves report files in s3"""
-        pass
-
-    # TODO
-    def compress_packages(self):
-        """Compresses file for export to s3."""
-        pass
 
     def create_summary(self):
         summary_data = {
@@ -234,7 +235,7 @@ class PackageListCreator():
             }
         }
 
-        summary_report = open('summary_report.json', 'w')
+        summary_report = open('user_packages/summary_report.json', 'w')
         summary_report.write(json.dumps(summary_data))
         summary_report.close()
 
@@ -244,6 +245,7 @@ class PackageListCreator():
         self.install_rpm_listing()
 
     def run(self):
+        self.create_packages_folder()
         self.create_yum_listing()
         self.create_rpm_listing()
         self.create_name_listing()

@@ -1,9 +1,0 @@
-INFO:...copying requirements file from s3
-INFO:...copying requirements file from s3
-INFO:...copying requirements file from s3
-INFO:...copying requirements file from s3
-INFO:...created yum listing file
-INFO:...created rpm listing file
-INFO:...created names only package listing file
-INFO:...grabbing qualified url for at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
-INFO:...copying requirements file from s3
