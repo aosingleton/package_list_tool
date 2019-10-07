@@ -27,12 +27,11 @@ filename = 'rpm_package_list.txt'
 # plc.create_qualified_url_listing()
 
 # create complete package listing
-plc.create_package_listing()
+# plc.create_package_listing()
 
 # create summary report
-# plc.create_summary()
+plc.create_summary()
 
 # copy requirements file from s3 and install
 # plc.run_install(bucket_name, filename)
-
 

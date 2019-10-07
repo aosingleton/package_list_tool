@@ -185,6 +185,8 @@ class PackageListCreator():
         info = str(output, 'utf-8').split('\n')
         yum_info = info[4:]
 
+        # dd = self.get_package_description(yum_info, package_name)
+        # print('here is description info \n', dd)
         return yum_info
 
     def create_package(self, yum_info_set):
@@ -208,8 +210,8 @@ class PackageListCreator():
             package_name = None
 
         # parsing yum info to return description or 'missing data' message
-        description = self.get_package_description(package_name, yum_info_set)
-        new_package['description'] = description
+        description = self.get_package_description(yum_info_set, package_name)
+        new_package['description'] = description.strip()
         self.package_list['packages'].append(new_package)
         logging.info('...saving package information for {}'.format(
             new_package['Name']))

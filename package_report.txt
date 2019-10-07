@@ -1894,3 +1894,31 @@ INFO:...grabbing description for ['Name        : perl-Getopt-Long', 'Arch       
 INFO:...saving package information for perl-Getopt-Long
 INFO:...grabbing description for ['Name        : mesa-libgbm', 'Arch        : i686', 'Version     : 17.2.3', 'Release     : 8.20171019.amzn2.0.4', 'Size        : 60 k', 'Repo        : installed', 'From repo   : amzn2-core', 'Summary     : Mesa gbm library', 'URL         : http://www.mesa3d.org', 'License     : MIT', 'Description : Mesa gbm runtime library.', '', '']
 INFO:...saving package information for mesa-libgbm
+INFO:...grabbing description for None
+INFO:...grabbing description for None
+INFO:...grabbing description for None
+INFO:...grabbing description for None
+INFO:...grabbing description for at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
+INFO:...grabbing description for ['Name        : at-spi2-atk', 'Arch        : x86_64', 'Version     : 2.22.0', 'Release     : 2.amzn2.0.2', 'Size        : 228 k', 'Repo        : installed', 'From repo   : amzn2-core', 'Summary     : A GTK+ module that bridges ATK to D-Bus at-spi', 'URL         : https://wiki.linuxfoundation.org/en/AT-SPI_on_D-Bus', 'License     : LGPLv2+', 'Description : at-spi allows assistive technologies to access GTK-based', '            : applications. Essentially it exposes the internals of applications', '            : for automation, so tools such as screen readers, magnifiers, or', '            : even scripting interfaces can query and interact with GUI', '            : controls.', '            : ', '            : This version of at-spi is a major break from previous versions.', '            : It has been completely rewritten to use D-Bus rather than', '            : ORBIT / CORBA for its transport protocol.', '            : ', '            : This package includes a gtk-module that bridges ATK to the new', '            : D-Bus based at-spi.', '', '']
+
+INFO:...grabbing description for at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
+INFO:...grabbing description for at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
+INFO:...grabbing description for at-spi2-atk-2.22.0-2.amzn2.0.2.x86_64
+INFO:...completing package listing update.
+INFO:...grabbing description for at-spi2-atk
+INFO:...saving package information for at-spi2-atk
+INFO:...grabbing description for mythes
+INFO:...saving package information for mythes
+INFO:...grabbing description for perl-Getopt-Long
+INFO:...saving package information for perl-Getopt-Long
+INFO:...grabbing description for mesa-libgbm
+INFO:...saving package information for mesa-libgbm
+INFO:...completing package listing update.
+INFO:...grabbing description for at-spi2-atk
+INFO:...saving package information for at-spi2-atk
+INFO:...grabbing description for mythes
+INFO:...saving package information for mythes
+INFO:...grabbing description for perl-Getopt-Long
+INFO:...saving package information for perl-Getopt-Long
+INFO:...grabbing description for mesa-libgbm
+INFO:...saving package information for mesa-libgbm
