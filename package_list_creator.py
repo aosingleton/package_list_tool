@@ -202,8 +202,9 @@ class PackageListCreator():
                 new_package[key] = value
 
         try:
-            package_name = new_package['name']
-        except:
+            package_name = new_package['Name']
+        except Exception as e:
+            print('description did not work...here is error', e)
             package_name = None
 
         # parsing yum info to return description or 'missing data' message
@@ -211,7 +212,7 @@ class PackageListCreator():
         new_package['description'] = description
         self.package_list['packages'].append(new_package)
         logging.info('...saving package information for {}'.format(
-            new_package['name']))
+            new_package['Name']))
 
     def create_package_listing(self):
         """Updates object package list array with avaiable yum data.
@@ -219,6 +220,7 @@ class PackageListCreator():
         Creates final package listing file containing.
         """
         logging.info('...completing package listing update.')
+        all_package_info = open('user_packages/final_package_report.json', 'w')
         rpm_file = 'user_packages/rpm_package_list.txt'
         names = open(rpm_file, 'r')
         package_names = names.readlines()
@@ -228,6 +230,7 @@ class PackageListCreator():
             self.create_package(yum_info_set)
 
         self.package_list['package_count'] = len(self.package_list['packages'])
+        all_package_info.write(json.dumps(self.package_list))
 
     def create_summary(self):
         """Creates summary file describing instance package information."""
@@ -248,7 +251,10 @@ class PackageListCreator():
         summary_report.close()
 
     def run_install(self, bucket_name, filename):
-        """User may be asked to enter password."""
+        """Installs downloaded pacakge list.
+        
+        Should be updated to install from either internet or zip folder if interet is inaccessible.  User may be asked to enter password.
+        """
         self.import_s3_package_listing(bucket_name, filename)
         self.install_rpm_listing()
 
