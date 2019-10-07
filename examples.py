@@ -8,8 +8,8 @@ plc = package_list_creator.PackageListCreator()
 bucket_name = 'astempbucket105'
 filename = 'rpm_package_list.txt'
 
-# run all commands
-plc.run()
+# create package listing filess
+# plc.run()
 
 # create temporary packages folder
 # plc.create_packages_folder()
@@ -34,4 +34,3 @@ plc.run()
 
 # copy requirements file from s3 and install
 # plc.run_install(bucket_name, filename)
-

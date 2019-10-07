@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import subprocess
+import shutil
 
 
 logging.basicConfig(
@@ -140,8 +141,9 @@ class PackageListCreator():
         check = value in self.key_fields
         return check
 
-    def get_package_description(self, yum_info_set, package_name=None):
-        """Returns description string from yum pacakge.  
+    def _parse_description(self, yum_info_set, package_name=None):
+        """Returns description string from yum pacakge.
+          
         Argument:
         yum_info_set -- yum package info 
 
@@ -179,8 +181,6 @@ class PackageListCreator():
         info = str(output, 'utf-8').split('\n')
         yum_info = info[4:]
 
-        # dd = self.get_package_description(yum_info, package_name)
-        # print('here is description info \n', dd)
         return yum_info
 
     def create_package(self, yum_info_set):
@@ -200,11 +200,10 @@ class PackageListCreator():
         try:
             package_name = new_package['Name']
         except Exception as e:
-            print('description did not work...here is error', e)
             package_name = None
 
         # parsing yum info to return description or 'missing data' message
-        description = self.get_package_description(yum_info_set, package_name)
+        description = self._parse_description(yum_info_set, package_name)
         new_package['description'] = description.strip()
         self.package_list['packages'].append(new_package)
         logging.info('...saving package information for {}'.format(
@@ -261,6 +260,22 @@ class PackageListCreator():
         cmd = f'aws s3 cp s3://{bucket_name}/{filename} user_packages/{updated_filename}'
         subprocess.call(cmd, shell=True)
 
+    def _zip_user_packages(self, bucket_name):
+        """Zip user_packages files and upload to s3 bucket."""
+        today = datetime.datetime.today()
+        created_at = today.strftime('%b_%d_%Y')
+        
+        try:
+            zipped_folder_path = shutil.make_archive(f'package_zip_{created_at}', 'zip', 'user_packages')
+        except Exception as e:
+            logging.error(e)
+
+        try:
+            cmd = f'aws s3 cp {zipped_folder_path} s3://{bucket_name}/project_packages'
+            subprocess.call(cmd, shell=True)
+        except Exception as e:
+            logging.error(e)
+
     def run_install(self, bucket_name, filename):
         """Installs downloaded pacakge list.
         
@@ -276,4 +291,4 @@ class PackageListCreator():
         self.create_name_listing()
         self.create_qualified_url_listing()
         self.create_package_listing()
-        self.create_summary()
+        self._create_summary()
