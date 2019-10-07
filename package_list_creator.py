@@ -143,7 +143,7 @@ class PackageListCreator():
 
     def _parse_description(self, yum_info_set, package_name=None):
         """Returns description string from yum pacakge.
-          
+
         Argument:
         yum_info_set -- yum package info 
 
@@ -284,7 +284,7 @@ class PackageListCreator():
         self._import_s3_package_listing(bucket_name, filename)
         self._install_rpm_listing()
 
-    def run(self):
+    def run(self, bucket_name):
         self.create_packages_folder()
         self.create_yum_listing()
         self.create_rpm_listing()
@@ -292,3 +292,4 @@ class PackageListCreator():
         self.create_qualified_url_listing()
         self.create_package_listing()
         self._create_summary()
+        self._zip_user_packages(bucket_name)
